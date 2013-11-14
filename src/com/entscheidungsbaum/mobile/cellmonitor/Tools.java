@@ -3,7 +3,6 @@ package com.entscheidungsbaum.mobile.cellmonitor;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.Set;
 
 import org.json.JSONException;
@@ -54,7 +53,7 @@ public class Tools {
 	 * @param resultCode
 	 * @param resultData
 	 */
-	public static JSONObject resultInfoToJson(Bundle resultData, Timestamp aDate) {
+	public static JSONObject resultInfoToJson(Bundle resultData, String aDate) {
 		Log.d(LOG_TAG, " resultInfoToJson invoked");
 
 		JSONObject cellJson = new JSONObject();

@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
 import org.json.JSONObject;
 
@@ -16,6 +17,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 /**
@@ -89,6 +91,12 @@ public class CellDataResultReceiver extends ResultReceiver {
 	protected void onReceiveResult(int resultCode, Bundle resultData) {
 		timestamp = new Timestamp(System.currentTimeMillis());
 
+		SimpleDateFormat s = new SimpleDateFormat("ddMMyyyyhhmmss");
+		
+		String timeFormatString = s.format(timestamp);
+//		s.ge
+//		String format = s.format(new DateFormat());
+//		
 		Log.d(LOG_TAG, "onReceiveResult in " + LOG_TAG + " resultData "
 				+ resultData + " resultCode " + resultData + " on date "
 				+ timestamp);
@@ -97,7 +105,7 @@ public class CellDataResultReceiver extends ResultReceiver {
 			mCellDataResultReceiver.onReceiveResult(resultCode, resultData);
 			persistedFile = new File("GenericCellDataReceiveResults-"
 					+ timestamp + ".json");
-			JSONObject json = Tools.resultInfoToJson(resultData, timestamp);
+			JSONObject json = Tools.resultInfoToJson(resultData, timeFormatString);
 			isPersisted = Tools.persistToFile(json, persistedFile);
 			uploadIntervall = uploadIntervall + 1;
 

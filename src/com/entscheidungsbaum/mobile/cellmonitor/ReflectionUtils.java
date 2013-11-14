@@ -93,13 +93,9 @@ public final class ReflectionUtils {
 		// get rid of the object methods and superclass methods !!! @TODO
 		final Method[] relevantMethod = mClass.getMethods();
 
-		String tempMethod = "";
 		for (int i = 0; i <= relevantMethod.length - 1; i++) {
 			String logMethod = relevantMethod[i].getName();
 			if (logMethod.matches(patternString)) {
-
-				tempMethod = relevantMethod[i].getName().trim()
-						.replace(relevantMethod[i].getName(), "");
 
 				Log.d(LOG_TAG, " IRRELEVANTMETHODS -> " + logMethod
 						+ " Length ->  " + relevantMethod.length);
@@ -121,7 +117,7 @@ public final class ReflectionUtils {
 							" MYRELEVANTMETHODS -> "
 									+ relevantMethod[i].getName() + " RETURN "
 									+ mRet);
-					mTokenList.put(relevantMethod[i].getName(), mStr);
+					mTokenList.put(relevantMethod[i].getName(), mRet.toString());
 					Log.d(LOG_TAG, " MTOKENLIST = " + mTokenList);
 				} catch (IllegalArgumentException e1) {
 					// TODO Auto-generated catch block
@@ -133,6 +129,10 @@ public final class ReflectionUtils {
 					// TODO Auto-generated catch block
 					Log.e(LOG_TAG, "InvocationTargetException " + e1);
 				}
+				// finally {
+				// sb.append(mStr);
+				// mTokenList.put(relevantMethod[i].getName(), mStr);
+				// }
 				sb.append(mStr);
 
 			}

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 
 import android.annotation.TargetApi;
 import android.app.IntentService;
@@ -75,7 +76,7 @@ public class CellMonitorActivatorService extends IntentService implements
 
 	private int mPingFlag;
 
-	private AsyncTask<String, Void, HashMap<String, HashMap<String, Long>>> httpDownloadTest;
+	private AsyncTask<String, Void, HashMap<String, Long>> httpDownloadTest;
 
 	/*
 	 * fields to set from the phoneStateListener
@@ -122,10 +123,7 @@ public class CellMonitorActivatorService extends IntentService implements
 		receiver = intent.getParcelableExtra("receiver");
 		mCellPhysicsResultReceiver = intent
 				.getParcelableExtra("cellphysicsreceiver");
-
-		// Log.d(LOG_TAG, "ResultReceiver ref. -> " + receiver.getClass());
-		// Log.d(LOG_TAG, "CellPhysicsResultReceiver ref. -> "
-		// + mCellPhysicsResultReceiver.getClass());
+		
 
 		String command = intent.getStringExtra("command");
 		Log.d(LOG_TAG, "Command " + command);
@@ -161,7 +159,7 @@ public class CellMonitorActivatorService extends IntentService implements
 		Log.d(LOG_TAG, " send To Receiver -> " + aBundle.toString()
 				+ " receiver -> " + receiver.toString()
 				+ " aBundle from PackageName " + this.getPackageName());
-		// update();
+
 		if (cellBundle != null && cellPhysicsBundle != null) {
 
 			receiver.send(resultCode, cellBundle);
@@ -239,12 +237,6 @@ public class CellMonitorActivatorService extends IntentService implements
 			Log.d(LOG_TAG, " available location " + gcl);
 
 		}
-
-		// Log.d(LOG_TAG, "startPhoneStateListnerV9 Neighbour Cell -> "
-		// + tm.getNeighboringCellInfo().toString() + " events -> "
-		// + events + " " + tm.getCallState() + " getCellLocation Lac -> "
-		// + gcl.getLac() + " cid -> " + gcl.getCid()
-		// + " umts scrambling code -> " + gcl.getPsc());
 
 		int[] gclInteger = { gcl.getCid(), gcl.getLac(), gcl.getPsc() };
 		Log.d(LOG_TAG, "startPhoneStateListnerV9 Neighbour Cell -> "
@@ -509,34 +501,44 @@ public class CellMonitorActivatorService extends IntentService implements
 
 			for (Map.Entry<String, Object> entry : signalMap.entrySet()) {
 
-				Log.d(LOG_TAG, "ONSIGKey = " + entry.getKey() + ", Value = "
-						+ entry.getValue().toString());
 				cellPhysicsBundle.putString(entry.getKey(), entry.getValue()
 						.toString());
-				Log.d(LOG_TAG,
-						" CELLPHYSICSBUNDLE=" + cellPhysicsBundle.toString());
-				// update();
+
 			}
 
 			Log.d(LOG_TAG, "CELLBUNDLE in onSignalStrength" + cellPhysicsBundle
 					+ " mPingFlag" + mPingFlag);
-			if (mPingFlag > 2) {
+			if (mPingFlag > 6) {
 				String pingString = NetworkingTools.ping().toString();
 				Log.d(LOG_TAG, "CELLBUNDLE ping result" + pingString);
 				cellPhysicsBundle.putString("ping", pingString);
 
 				mPingFlag = 0;
 
-				DownloadTest dtest =  new DownloadTest(CellMonitorActivatorService.this);
+				DownloadTest dtest = new DownloadTest(
+						CellMonitorActivatorService.this);
 				httpDownloadTest = dtest
 						.execute("http://cellmonitor.entscheidungsbaum.com/img/common/globe.png");
 
-				// for (Entry<String, HashMap<String, Long>> iterable_element :
-				// httpDownloadTest.entrySet()) {
-				// Log.d(LOG_TAG, "HTTPDOWNLOADKey -> " +
-				// iterable_element.getKey() + " Value -> " +
-				// iterable_element.getValue());
-				// }
+				StringBuffer sb = new StringBuffer();
+
+				try {
+					long[] httpTestArray = {dtest.get().get("startHttp"),dtest.get().get("HttpDownloadFinshed")};
+					sb.append(dtest);
+					// sb.append("StartHttp : ");
+					// sb.append(dtest.get().get("startHttp"));
+					// sb.append(";");
+					// sb.append("HttpDownloadFinished : ");
+					// sb.append(dtest.get().get("HttpDownloadFinshed"));
+
+					cellPhysicsBundle.putLongArray("HttpDownloadTest",httpTestArray);
+
+				} catch (InterruptedException e) {
+					Log.d(LOG_TAG, " DOWNLOADTEST -> " + e);
+				} catch (ExecutionException e) {
+					Log.d(LOG_TAG, " DOWNLOADTEST -> " + e);
+				}
+			
 			}
 			sendToReceiver(CELLPHYSICS, cellPhysicsBundle);
 			super.onSignalStrengthsChanged(signalStrength);
@@ -560,7 +562,7 @@ public class CellMonitorActivatorService extends IntentService implements
 		cellPhysicsBundle.putDoubleArray("geoLocation", geoLoc);
 		cellBundle.putDoubleArray("geoLocation ", geoLoc);
 		mPingFlag = +1;
-		if (mPingFlag > 3) {
+		if (mPingFlag > 6) {
 			String pingString = NetworkingTools.ping().toString();
 			cellBundle.putString("ping", pingString);
 		}
@@ -611,7 +613,7 @@ public class CellMonitorActivatorService extends IntentService implements
 	 */
 
 	private static class DownloadTest extends
-			AsyncTask<String, Void, HashMap<String, HashMap<String, Long>>> {
+			AsyncTask<String, Void, HashMap<String, Long>> {
 
 		String LOG_TAG = DownloadTest.class.getCanonicalName();
 		private Context mContext;
@@ -637,15 +639,14 @@ public class CellMonitorActivatorService extends IntentService implements
 		 * gets the
 		 */
 		@Override
-		protected HashMap<String, HashMap<String, Long>> doInBackground(
-				String... params) {
+		protected HashMap<String, Long> doInBackground(String... params) {
 			Log.d(LOG_TAG, " URL to do the HTTP download " + params[0]);
 			PowerManager powerManager = (PowerManager) this.mContext
 					.getSystemService(Context.POWER_SERVICE);
 			PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
 					PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
 			wakeLock.acquire();
-			HashMap<String, HashMap<String, Long>> testHttp = new HashMap<String, HashMap<String, Long>>();
+			HashMap<String, Long> testHttp = new HashMap<String, Long>();
 			try {
 				Log.d(LOG_TAG, "starting doBackground for url " + params[0]);
 
@@ -658,16 +659,13 @@ public class CellMonitorActivatorService extends IntentService implements
 				return testHttp;
 			} catch (Exception ioe) {
 				Log.e(LOG_TAG, " Exception " + ioe);
-			}
-			finally {
+			} finally {
 				wakeLock.release();
 			}
 			wakeLock.release();
 
 			return testHttp;
 		}
-		
-		
 
 	}
 }

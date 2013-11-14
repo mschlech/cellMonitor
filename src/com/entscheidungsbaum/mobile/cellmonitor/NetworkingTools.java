@@ -51,8 +51,6 @@ public class NetworkingTools {
 
 	long downloadTimeCompleted = 0;
 
-	static HashMap<String, Long> downloadSteps = new HashMap<String, Long>();
-
 	static String testUrl = "173.194.113.15";
 
 	static String testResult;
@@ -220,23 +218,17 @@ public class NetworkingTools {
 	}
 
 	// test the download of a well defined
-	public static HashMap<String, HashMap<String, Long>> testHttpConnection(
+	public static HashMap<String,  Long> testHttpConnection(
 			String testHttpUri) {
 		Log.d(LOG_TAG, "TESTHTTPCONNECTION = " + testHttpUri);
 
-		HashMap<String, HashMap<String,Long>> downloadTime = new HashMap<String, HashMap<String,Long>>();
+		HashMap<String, Long> downloadTime = new HashMap<String,Long>();
 
 		long fileLength = 0;
 
 		byte[] transferedBytes = new byte[1024];
 
 		InputStream inputStream = null;
-		// long startDownloadTimeOffset;
-		// long serverResponseTime;
-		// using the android client because it might be the most used one in the
-		// android community
-//		final HttpClient httpClient = AndroidHttpClient.newInstance("Android");
-//		final HttpGet httpGet = new HttpGet(testHttpUri);
 		
 		long getContentDuration=0;
 		long statusTime=0;
@@ -254,12 +246,9 @@ public class NetworkingTools {
 	        int statusCode = conn.getResponseCode();
 	        fileLength = conn.getContentLength();
 			// start
-			startExecute = SystemClock.currentThreadTimeMillis();
-			downloadSteps.put("startHttp", startExecute );
+			startExecute = System.currentTimeMillis();
 			Log.d(LOG_TAG, "STATUS CODE HTTP GET - " + statusCode);
 			//
-			statusTime = SystemClock.currentThreadTimeMillis() - startExecute;
-			downloadSteps.put("response", statusTime);
 		
 			inputStream = conn.getInputStream();
 			
@@ -271,17 +260,20 @@ public class NetworkingTools {
 				Log.d(LOG_TAG, " CONTENTLENGTH => total " + total + " count => "+ count);
 
 				if (total ==  fileLength) {
-					getContentDuration =SystemClock.currentThreadTimeMillis() - startExecute;
+					
 					Log.d(LOG_TAG, " file = " + total
 							+ " retrieved file content Length " + fileLength + " getContentDuration =" +getContentDuration);
-					downloadSteps
-							.put("contentDownloadDuration", getContentDuration);
+//					downloadSteps
+//							.put("contentDownloadDuration", getContentDuration);
 				}
 			}
-			Log.d(LOG_TAG, "TIMELIST  Size = " + downloadSteps.size());
-			Log.d(LOG_TAG, "TIMELIST  duration startExecute = " + startExecute + " statusTime = " + statusTime + " contentdeliveryDuration =  " + getContentDuration);
+			getContentDuration =System.currentTimeMillis() - startExecute;
 
-			downloadTime.put("HttpDownload", downloadSteps);
+			Log.d(LOG_TAG, "TIMELIST  duration startExecute = " + startExecute + " statusTime = " + statusTime + " contentdeliveryDuration =  " + getContentDuration);
+			downloadTime.put("startHttp", startExecute );
+
+			downloadTime.put("HttpDownloadFinshed", getContentDuration);
+
 
 		} catch (Exception e) {
 			Log.e(LOG_TAG, "Error in test Http connection " + e);
@@ -289,7 +281,9 @@ public class NetworkingTools {
 		} finally {
 			//downloadSteps = null;
 			//downloadTime = null;
-			Log.d(LOG_TAG, "downloadsteps  " + downloadSteps +" downloadtime " + downloadTime);
+			statusTime=0;
+			startExecute=0;
+			Log.d(LOG_TAG, "downloadtime  " + downloadTime + " ms" );
 
 		}
 

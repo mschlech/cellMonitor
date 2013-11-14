@@ -3,8 +3,7 @@ package com.entscheidungsbaum.mobile.cellmonitor;
 import java.io.File;
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
+import java.text.SimpleDateFormat;
 
 import org.json.JSONObject;
 
@@ -14,6 +13,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.ResultReceiver;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 /**
@@ -39,7 +39,6 @@ public class CellPhysicsReceiver extends ResultReceiver {
 
 	private boolean isPersisted;
 	JSONObject json;
-	
 
 	/**
 	 * @param handler
@@ -78,26 +77,32 @@ public class CellPhysicsReceiver extends ResultReceiver {
 	protected void onReceiveResult(int resultCode, Bundle resultData) {
 		timestamp = new Timestamp(System.currentTimeMillis());
 
+		SimpleDateFormat s = new SimpleDateFormat("ddMMyyyyhhmmss");
+
+		String timeFormatString = s.format(timestamp);
+
 		Log.d(LOG_TAG, "onReceiveResult in " + LOG_TAG + " resultData "
 				+ resultData + " resultCode " + resultData + " on date "
-				+ timestamp);
+				+ timeFormatString);
 
 		if (mCellPhysicsResultReceiver != null) {
 			mCellPhysicsResultReceiver.onReceiveResult(resultCode, resultData);
-			cellPhysicsFile = new File("CellPhysicsJsonFile-" + timestamp
+			cellPhysicsFile = new File("CellPhysicsJsonFile-" + timeFormatString
 					+ ".json");
-			json = Tools.resultInfoToJson(resultData, timestamp);
+			json = Tools.resultInfoToJson(resultData, timeFormatString);
 			isPersisted = Tools.persistToFile(json, cellPhysicsFile);
 
 			Log.d(LOG_TAG, " JSON before upload task interval = "
 					+ uploadIntervall + " persisted = " + isPersisted);
 			if (uploadIntervall == 5) {
-				
-				File physicsFile = new File(Environment.getExternalStorageDirectory()+cellPhysicsFile.getAbsolutePath());
+
+				File physicsFile = new File(
+						Environment.getExternalStorageDirectory()
+								+ cellPhysicsFile.getAbsolutePath());
 				Log.d(LOG_TAG, "uploading json now uploadinterval reached ="
 						+ uploadIntervall + " CellPhysicsFile length"
 						+ cellPhysicsFile.length());
-				
+
 				new UploadTask().execute(physicsFile);
 				uploadIntervall = 0;
 				// try {
@@ -120,8 +125,6 @@ public class CellPhysicsReceiver extends ResultReceiver {
 		}
 
 	}
-	
-	
 
 	/*
 	 * (non-Javadoc)
@@ -191,15 +194,11 @@ public class CellPhysicsReceiver extends ResultReceiver {
 		}
 
 	}
-	
-	
-	
+
 	private final void complete(int anUploadIntervall) {
 		Log.d(LOG_TAG, "completed intervall = " + uploadIntervall);
 		mDone = true;
 
 	}
 
-	
-	
 }
